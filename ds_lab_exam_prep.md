@@ -88,6 +88,115 @@ plt.tight_layout()
 plt.show()
 ```
 
+
+
+```python
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+
+# -----------------------------
+# Load Dataset
+# -----------------------------
+df = sns.load_dataset("mpg").copy()
+
+# -----------------------------
+# (a) Dimension, Structure, Summary
+# -----------------------------
+print("Shape (Rows, Columns):", df.shape)
+print("\nInfo:")
+df.info()
+print("\nSummary Statistics:")
+print(df.describe(numeric_only=True))
+print("\nNull Values per Column:")
+print(df.isna().sum())
+
+# -----------------------------
+# (b) Preprocessing
+# -----------------------------
+# Convert horsepower to numeric (handle '?' or text)
+df["horsepower"] = pd.to_numeric(df["horsepower"], errors="coerce")
+
+# Fill missing horsepower with median
+df["horsepower"].fillna(df["horsepower"].median(), inplace=True)
+
+# Drop remaining null rows
+df.dropna(inplace=True)
+df.reset_index(drop=True, inplace=True)
+
+print("\nAfter Cleaning, Shape:", df.shape)
+
+# -----------------------------
+# (c) Histogram (at least two)
+# -----------------------------
+plt.figure(figsize=(10,4))
+
+plt.subplot(1,2,1)
+sns.histplot(df["mpg"], kde=True)
+plt.title("MPG Distribution")
+
+plt.subplot(1,2,2)
+sns.histplot(df["horsepower"], kde=True)
+plt.title("Horsepower Distribution")
+
+plt.tight_layout()
+plt.show()
+
+# -----------------------------
+# (d) Violin Plot
+# -----------------------------
+plt.figure(figsize=(6,4))
+sns.violinplot(y=df["mpg"])
+plt.title("Violin Plot of MPG")
+plt.show()
+
+# -----------------------------
+# (e) Box Plot (Before Outlier Treatment)
+# -----------------------------
+plt.figure(figsize=(6,4))
+sns.boxplot(y=df["horsepower"])
+plt.title("Horsepower - Before Outlier Treatment")
+plt.show()
+
+# Outlier Treatment using IQR method
+Q1 = df["horsepower"].quantile(0.25)
+Q3 = df["horsepower"].quantile(0.75)
+IQR = Q3 - Q1
+
+lower = Q1 - 1.5 * IQR
+upper = Q3 + 1.5 * IQR
+
+df_no_out = df[(df["horsepower"] >= lower) & (df["horsepower"] <= upper)]
+
+# Box Plot After Treatment
+plt.figure(figsize=(6,4))
+sns.boxplot(y=df_no_out["horsepower"])
+plt.title("Horsepower - After Outlier Treatment")
+plt.show()
+
+# -----------------------------
+# (f) Heatmap (Correlation)
+# -----------------------------
+plt.figure(figsize=(8,6))
+corr = df_no_out.corr(numeric_only=True)
+sns.heatmap(corr, annot=True, cmap="coolwarm")
+plt.title("Correlation Heatmap")
+plt.show()
+
+# -----------------------------
+# (g) Standardization
+# -----------------------------
+scaler = StandardScaler()
+
+continuous_cols = ["mpg", "horsepower", "weight", "acceleration"]
+
+df_no_out[continuous_cols] = scaler.fit_transform(df_no_out[continuous_cols])
+
+print("\nStandardized Data (First 5 Rows):")
+print(df_no_out[continuous_cols].head())
+```
+
 **Expected Output:**
 - Dataset dimensions, structure, and summary table.
 - Null count per column.
@@ -107,34 +216,67 @@ plt.show()
 
 **Code:**
 ```python
+# Program 3 – Exploratory Data Analysis
+
+import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-# Use preprocessed AutoMPG in lab if available
-# autompg = pd.read_csv("auto-mpg-clean.csv")
-autompg = sns.load_dataset("mpg").dropna().copy()
+# Load dataset
+df = sns.load_dataset("mpg")
 
-cats = list(autompg.select_dtypes(include=["object", "category"]).columns)
-nums = list(autompg.select_dtypes(exclude=["object", "category"]).columns)
-print("Categorical variables:", cats)
-print("Numerical variables:", nums)
+# -----------------------------
+# Step 1: Identify categorical and numerical variables
+# -----------------------------
+cats = list(df.select_dtypes(include=['object']).columns)
+nums = list(df.select_dtypes(exclude=['object']).columns)
 
-fig, ax = plt.subplots(2, 2, figsize=(12, 8))
+print("Categorical Variables:", cats)
+print("Numerical Variables:", nums)
 
-sns.histplot(autompg["mpg"], kde=True, ax=ax[0, 0])
-ax[0, 0].set_title("Histogram: MPG")
-
-sns.scatterplot(data=autompg, x="horsepower", y="mpg", ax=ax[0, 1])
-ax[0, 1].set_title("Scatter: Horsepower vs MPG")
-
-sns.countplot(data=autompg, x="origin", ax=ax[1, 0])
-ax[1, 0].set_title("Count Plot: Origin")
-
-sns.pointplot(data=autompg, x="origin", y="mpg", ax=ax[1, 1])
-ax[1, 1].set_title("Point Plot: Origin vs MPG")
-
-plt.tight_layout()
+# -----------------------------
+# (a) Histogram for continuous variables
+# -----------------------------
+plt.figure(figsize=(6,4))
+plt.hist(df["mpg"], bins=20, color="skyblue")
+plt.title("Histogram of MPG")
+plt.xlabel("mpg")
+plt.ylabel("Frequency")
 plt.show()
+
+plt.figure(figsize=(6,4))
+plt.hist(df["weight"], bins=20, color="lightgreen")
+plt.title("Histogram of Weight")
+plt.xlabel("weight")
+plt.ylabel("Frequency")
+plt.show()
+
+# -----------------------------
+# (b) Scatter plot (relationship between two continuous variables)
+# -----------------------------
+plt.figure(figsize=(6,4))
+plt.scatter(df["horsepower"], df["mpg"])
+plt.title("Horsepower vs MPG")
+plt.xlabel("horsepower")
+plt.ylabel("mpg")
+plt.show()
+
+# -----------------------------
+# (c) Count plot (categorical frequency)
+# -----------------------------
+plt.figure(figsize=(6,4))
+sns.countplot(x="origin", data=df)
+plt.title("Count Plot of Origin")
+plt.show()
+
+# -----------------------------
+# (d) Point plot (one categorical + one continuous)
+# -----------------------------
+plt.figure(figsize=(6,4))
+sns.pointplot(x="origin", y="mpg", data=df)
+plt.title("Average MPG by Origin")
+plt.show()
+
 ```
 
 **Expected Output:**
@@ -155,6 +297,8 @@ plt.show()
 
 **Code:**
 ```python
+# Program 4 – KNN (Breast Cancer)
+
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -162,36 +306,38 @@ from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
+from sklearn.metrics import confusion_matrix, accuracy_score
 
-# Lab option: df = pd.read_csv("breast_cancer.csv")
+# Load dataset
 data = load_breast_cancer()
-df = pd.DataFrame(data.data, columns=data.feature_names)
+X = data.data
+y = data.target
 
-X = df[["mean texture", "mean radius"]]
-y = pd.Series(data.target).map({0: "malignant", 1: "benign"})
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
+# Standardize data
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
 
-sc = StandardScaler()
-X_train = sc.fit_transform(X_train)
-X_test = sc.transform(X_test)
-
+# Train KNN (try k=5)
 knn = KNeighborsClassifier(n_neighbors=5)
 knn.fit(X_train, y_train)
+
+# Predict
 y_pred = knn.predict(X_test)
 
-cm = confusion_matrix(y_test, y_pred, labels=["malignant", "benign"])
-print("Accuracy:", round(accuracy_score(y_test, y_pred), 4))
-print(classification_report(y_test, y_pred))
+# Accuracy
+print("Accuracy:", accuracy_score(y_test, y_pred))
 
-sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
-            xticklabels=["malignant", "benign"],
-            yticklabels=["malignant", "benign"])
-plt.xlabel("Predicted")
-plt.ylabel("Actual")
-plt.title("KNN Confusion Matrix")
+# Confusion Matrix
+cm = confusion_matrix(y_test, y_pred)
+sns.heatmap(cm, annot=True, fmt='d')
+plt.title("Confusion Matrix")
 plt.show()
+
 ```
 
 **Expected Output:**
@@ -213,60 +359,33 @@ plt.show()
 
 **Code:**
 ```python
-from pathlib import Path
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier, plot_tree
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score,classification_report
+from sklearn.tree import plot_tree
 
-file = Path("student_performance.csv")
-if file.exists():
-    df = pd.read_csv(file)
-else:
-    np.random.seed(42)
-    n = 250
-    df = pd.DataFrame({
-        "study_hours": np.random.randint(1, 10, n),
-        "attendance": np.random.randint(50, 100, n),
-        "internal": np.random.randint(20, 50, n),
-        "assignment": np.random.randint(10, 30, n)
-    })
-    score = 3*df.study_hours + 0.4*df.attendance + 0.7*df.internal + 0.5*df.assignment
-    df["result"] = np.where(score >= np.median(score), "Pass", "Fail")
+df = pd.read_csv("./student_performance_new.csv")
+df.head()
+df.columns
+df.isna().sum()
 
-if "result" not in df.columns:
-    # If your column name differs, change here
-    df["result"] = np.where(df.iloc[:, -1] >= df.iloc[:, -1].median(), "Pass", "Fail")
+X = df[["Test Result ","Quiz Result ","Assignment Result "]]
+y = df.Result
 
-X = pd.get_dummies(df.drop(columns=["result"]), drop_first=True)
-y = df["result"]
+X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.2,random_state=42)
+clf = DecisionTreeClassifier(criterion='gini',splitter='random',random_state=42,max_depth=5)
+clf.fit(X_train,y_train)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=1, stratify=y)
-
-clf = DecisionTreeClassifier(criterion="gini", max_depth=3, random_state=20)
-clf.fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 
-print("Accuracy:", round(accuracy_score(y_test, y_pred), 4))
-print("Precision:", round(precision_score(y_test, y_pred, pos_label="Pass"), 4))
-print("Recall:", round(recall_score(y_test, y_pred, pos_label="Pass"), 4))
-print("F1:", round(f1_score(y_test, y_pred, pos_label="Pass"), 4))
+accuracy_score(y_test,y_pred)
+print(classification_report(y_test,y_pred))
 
-cm = confusion_matrix(y_test, y_pred, labels=["Pass", "Fail"])
-sns.heatmap(cm, annot=True, fmt="d", cmap="Reds", xticklabels=["Pass", "Fail"], yticklabels=["Pass", "Fail"])
-plt.title("Decision Tree Confusion Matrix")
-plt.show()
+plot_tree(clf)
 
-imp = pd.Series(clf.feature_importances_, index=X.columns).sort_values(ascending=False)
-print("\nTop features:\n", imp.head())
-
-plt.figure(figsize=(10, 5))
-plot_tree(clf, feature_names=X.columns, class_names=["Fail", "Pass"], filled=True)
-plt.title("Decision Tree")
-plt.show()
 ```
 
 **Expected Output:**
@@ -372,64 +491,77 @@ plt.show()
 
 **Code:**
 ```python
-from pathlib import Path
-import numpy as np
+#Naive Baye's Classifictaion algorithm
+import numpy as np 
 import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
 from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import classification_report
 
-file = Path("Placement data.csv")
-if file.exists():
-    placement = pd.read_csv(file)
-else:
-    np.random.seed(7)
-    n = 250
-    placement = pd.DataFrame({
-        "tenthmarks": np.random.randint(50, 100, n),
-        "twelthmarks": np.random.randint(45, 100, n),
-        "Ugmarks": np.random.randint(50, 95, n),
-        "Pgmarks": np.random.randint(50, 95, n),
-        "communication": np.random.randint(1, 11, n),
-        "internships": np.random.randint(0, 4, n),
-        "stream": np.random.choice(["CS", "IS", "EC"], n)
-    })
-    s = (placement.tenthmarks + placement.twelthmarks + placement.Ugmarks + placement.Pgmarks + 5*placement.communication + 6*placement.internships)
-    placement["Placement"] = np.where(s >= np.percentile(s, 55), "Placed", "Not Placed")
+dataset = pd.read_csv("C:/Users/user1/Downloads/Placement_Data.csv")
 
-# Encode X
-X = pd.get_dummies(placement.drop(columns=["Placement"]), drop_first=True)
-y = placement["Placement"]
+print(dataset.head())
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0, stratify=y)
+dataset.info()
+
+dataset = dataset.drop(["sl_no"], axis = 1)
+dataset = dataset.drop(["salary"], axis = 1)
+dataset = dataset.drop(["gender"], axis =1)
+
+#Placed and Not placed dataframes
+Placed = dataset[dataset.status == "Placed"]
+NPlaced = dataset[dataset.status == "Not Placed"]
+
+print(Placed)
+
+print(NPlaced)
+
+X=dataset[['ssc_p','hsc_p','degree_p','etest_p', 'mba_p']]
+y = dataset.status.values
+
+
+label_encoder = LabelEncoder()
+y = label_encoder.fit_transform(y)
+#dataset['gender'].map({'M': 1, 'F': 0})
+
+x_train, x_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 42)
 
 nb = GaussianNB()
-nb.fit(X_train, y_train)
-y_pred = nb.predict(X_test)
+nb.fit(x_train, y_train)
 
-# Prior and posterior probabilities
-print("Class labels:", nb.classes_)
-print("Prior probabilities:", nb.class_prior_)
-posterior = nb.predict_proba(X_test.iloc[[0]])[0]
-print("Posterior (first test row):", dict(zip(nb.classes_, posterior)))
+print("Naive Bayes score: ",nb.score(x_test, y_test)*100)
 
-print("\nAccuracy:", round(accuracy_score(y_test, y_pred), 4))
+predictions = nb.predict(x_test)
+conf_matrix = confusion_matrix(y_test, predictions)
+print("Confusion Matrix:")
+print(conf_matrix)
+
+accuracy = accuracy_score(y_test, predictions)
+print("Accuracy Score:", accuracy)
+
+precision = precision_score(y_test, predictions)
+print("Precision Score:", precision)
+
+recall = recall_score(y_test, predictions)
+print("Recall Score:", recall)
+
+f1 = f1_score(y_test, predictions)
+print("F1 Score:", f1)
+
+clf = MultinomialNB()
+clf.fit(x_train, y_train)
+
+print("Naive Bayes score with Multionmial NB classfier: ",clf.score(x_test, y_test)*100)
+
+bnb = BernoulliNB(binarize=0.0)
+model = bnb.fit(x_train, y_train)
+y_pred = bnb.predict(x_test)
 print(classification_report(y_test, y_pred))
-
-cm = confusion_matrix(y_test, y_pred, labels=["Placed", "Not Placed"])
-sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=["Placed", "Not Placed"], yticklabels=["Placed", "Not Placed"])
-plt.title("Naive Bayes Confusion Matrix")
-plt.show()
-
-fig, ax = plt.subplots(1, 2, figsize=(10, 4))
-ax[0].bar(nb.classes_, nb.class_prior_)
-ax[0].set_title("Prior Probability")
-ax[1].bar(nb.classes_, posterior)
-ax[1].set_title("Posterior Probability (1 sample)")
-plt.tight_layout()
-plt.show()
 ```
 
 **Expected Output:**
@@ -452,35 +584,31 @@ plt.show()
 **Code:**
 ```python
 import pandas as pd
-from mlxtend.preprocessing import TransactionEncoder
-from mlxtend.frequent_patterns import apriori, association_rules
+from mlxtend.frequent_patterns import apriori,association_rules
 
-# Option A (lab file): one row = comma-separated items
-# raw = pd.read_csv("market_basket.csv")
-# transactions = raw.iloc[:, 0].dropna().apply(lambda x: [i.strip() for i in str(x).split(',') if i.strip()]).tolist()
+df = pd.read_csv("basket.csv")
 
-# Option B: demo transactions (runs directly)
-transactions = [
-    ["milk", "bread", "eggs"],
-    ["milk", "bread"],
-    ["milk", "butter"],
-    ["bread", "butter"],
-    ["milk", "bread", "butter"],
-    ["bread", "eggs"],
-    ["milk", "eggs"],
-    ["milk", "bread", "butter", "eggs"]
-]
+df.describe()
+df.info()
+df.head()
+df.isnull().sum()
 
-te = TransactionEncoder()
-arr = te.fit(transactions).transform(transactions)
-basket = pd.DataFrame(arr, columns=te.columns_)
+df.fillna('',inplace=True)
 
-freq = apriori(basket, min_support=0.2, use_colnames=True)
-rules = association_rules(freq, metric="confidence", min_threshold=0.5)
-rules = rules.sort_values(["support", "confidence"], ascending=False)
+df_dum = pd.get_dummies(df)
+df_dum.head()
 
-print("Frequent itemsets:\n", freq)
-print("\nTop rules:\n", rules[["antecedents", "consequents", "support", "confidence", "lift"]].head())
+frequent_items = apriori(df_dum,min_support=0.01,
+                         use_colnames=True)
+frequent_items
+
+
+rules = association_rules(frequent_items,metric='confidence',
+                          min_threshold=0.01)
+rules = rules.sort_values(['support','confidence'],ascending=[False,False])
+
+
+rules
 ```
 
 **Expected Output:**
@@ -502,47 +630,78 @@ print("\nTop rules:\n", rules[["antecedents", "consequents", "support", "confide
 
 **Code:**
 ```python
-from pathlib import Path
-import numpy as np
 import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.cluster import KMeans
-from sklearn.datasets import make_blobs
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
-file = Path("Mall_Customers.csv")
-if file.exists():
-    df = pd.read_csv(file)
-    X = df[["Annual Income (k$)", "Spending Score (1-100)"]].values
-else:
-    X, _ = make_blobs(n_samples=200, centers=5, cluster_std=1.2, random_state=42)
+data = pd.read_csv("./Mall_Customers .csv")
 
-# Elbow method
-wcss = []
-for k in range(1, 11):
-    km = KMeans(n_clusters=k, random_state=42, n_init=10)
-    km.fit(X)
-    wcss.append(km.inertia_)
+data.head()
+data.shape
+data.describe()
+data.info()
 
-plt.figure(figsize=(6, 4))
-plt.plot(range(1, 11), wcss, marker="o")
-plt.xlabel("Number of clusters (K)")
-plt.ylabel("WCSS")
-plt.title("Elbow Method")
+# Encode 'Gender' column
+label_encoder = LabelEncoder()
+data['Gender'] = label_encoder.fit_transform(data["Gender"])
+
+# Selecting features for clustering
+X = data[['Gender','Age', 'Annual Income (k$)', 'Spending Score (1-100)']]
+
+# Standardizing the features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Using the Elbow Method to determine the optimal number of clusters
+inertia = []
+for i in range(1, 11):
+    kmeans = KMeans(n_clusters=i, n_init=10, random_state=42)
+    kmeans.fit(X_scaled)  # Use scaled data
+    inertia.append(kmeans.inertia_)
+
+# Plot the Elbow Method graph
+plt.figure(figsize=(8, 6))
+plt.plot(range(1, 11), inertia, marker='o', linestyle='-')
+plt.title('Elbow Method')
+plt.xlabel('Number of clusters')
+plt.ylabel('Inertia')
 plt.show()
 
-# Train KMeans with K=5
-kmeans = KMeans(n_clusters=5, random_state=42, n_init=10)
-labels = kmeans.fit_predict(X)
+# Choosing k=5 as the optimal number of clusters
+k = 5
+kmeans = KMeans(n_clusters=k, n_init=10, random_state=42)
+data['Cluster'] = kmeans.fit_predict(X)  # Assign clusters to data
 
-plt.figure(figsize=(7, 5))
-sns.scatterplot(x=X[:, 0], y=X[:, 1], hue=labels, palette="tab10", s=60)
-plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], c="black", s=180, marker="X", label="Centroids")
-plt.xlabel("Annual Income")
-plt.ylabel("Spending Score")
-plt.title("K-Means Clusters")
-plt.legend()
+# Plotting the clusters
+plt.figure(figsize=(8, 6))
+sns.scatterplot(x=data['Annual Income (k$)'], y=data['Spending Score (1-100)'], hue=data['Cluster'], palette='viridis', s=100)
+plt.title('K-Means Clustering')
+plt.xlabel('Annual Income (k$)')
+plt.ylabel('Spending Score (1-100)')
+plt.legend(title='Cluster')
 plt.show()
+
+# Choosing k=5 as the optimal number of clusters
+k = 5
+kmeans = KMeans(n_clusters=k, n_init=10, random_state=42)
+data['Cluster'] = kmeans.fit_predict(X)  # Assign clusters to data
+
+# Plotting the clusters
+plt.figure(figsize=(8, 6))
+sns.scatterplot(x=data['Annual Income (k$)'], y=data['Spending Score (1-100)'], hue=data['Cluster'], palette='viridis', s=100)
+# Plot the centroids on the original scale
+plt.scatter(kmeans.cluster_centers_[:, 2], kmeans.cluster_centers_[:, 3], s=300, c='red', marker='x', label='Centroids')
+
+plt.title('K-Means Clustering')
+plt.xlabel('Annual Income (k$)')
+plt.ylabel('Spending Score (1-100)')
+plt.legend(title='Cluster')
+plt.show()
+
+kmeans.cluster_centers_
+
 ```
 
 **Expected Output:**
