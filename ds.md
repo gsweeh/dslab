@@ -778,6 +778,42 @@ kmeans.cluster_centers_
 
 ```
 
+```python
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+
+# Load dataset
+df = pd.read_csv("Mall_Customers.csv")
+
+# Select features
+X = df[['Annual Income (k$)','Spending Score (1-100)']]
+
+# Elbow method
+wcss=[]
+for i in range(1,11):
+    km = KMeans(n_clusters=i)
+    km.fit(X)
+    wcss.append(km.inertia_)
+
+plt.plot(range(1,11),wcss)
+plt.title("Elbow Method")
+plt.xlabel("Clusters")
+plt.ylabel("WCSS")
+plt.show()
+
+# Train KMeans
+km = KMeans(n_clusters=5)
+y = km.fit_predict(X)
+
+# Plot clusters
+plt.scatter(X['Annual Income (k$)'],X['Spending Score (1-100)'],c=y)
+plt.scatter(km.cluster_centers_[:,0],km.cluster_centers_[:,1],c='red')
+plt.xlabel("Annual Income (k$)")
+plt.ylabel("Spending Score (1-100)")
+plt.show()
+```
+
 **Expected Output:**
 - Elbow graph with visible bend near optimal K.
 - Cluster scatter plot with 5 colored groups and centroid markers.
