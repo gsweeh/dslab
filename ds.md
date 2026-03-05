@@ -604,6 +604,40 @@ y_pred = bnb.predict(x_test)
 print(classification_report(y_test, y_pred))
 ```
 
+```python
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import confusion_matrix, accuracy_score
+
+# Load dataset
+df = pd.read_csv("Placement_Data.csv")
+
+# Features and target
+X = df[['ssc_p','hsc_p','degree_p','etest_p','mba_p']]
+y = df['status']
+
+# Train test split
+X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.2,random_state=1)
+
+# Naive Bayes model
+model = GaussianNB()
+model.fit(X_train,y_train)
+
+# Prediction
+y_pred = model.predict(X_test)
+
+# Accuracy
+print("Accuracy:",accuracy_score(y_test,y_pred))
+
+# Confusion matrix
+cm = confusion_matrix(y_test,y_pred)
+sns.heatmap(cm,annot=True)
+plt.show()
+```
+
 **Expected Output:**
 - Prior probabilities per class.
 - Posterior probabilities for sample input.
