@@ -472,6 +472,46 @@ plt.xlabel("Importance")
 plt.show()
 ```
 
+```python
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, accuracy_score
+
+# Load dataset
+df = pd.read_csv("student_performance.csv")
+
+# Features and target
+X = df.drop("result", axis=1)
+y = df["result"]
+
+# Train test split
+X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.3,random_state=1)
+
+# Random Forest model
+model = RandomForestClassifier(n_estimators=100,random_state=1)
+model.fit(X_train,y_train)
+
+# Prediction
+y_pred = model.predict(X_test)
+
+# Accuracy
+print("Accuracy:",accuracy_score(y_test,y_pred))
+
+# Confusion Matrix
+cm = confusion_matrix(y_test,y_pred)
+sns.heatmap(cm,annot=True,fmt="d",cmap="Greens")
+plt.show()
+
+# Feature Importance
+imp = pd.Series(model.feature_importances_,index=X.columns)
+imp.plot.bar()
+plt.title("Feature Importance")
+plt.show()
+```
+
 **Expected Output:**
 - Best hyperparameters from randomized search.
 - Test accuracy and classification report.
